@@ -1,0 +1,24 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  RestApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SmartS3ApiGateway
+  BucketResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ParentId: !GetAtt RestApiGateway.RootResourceId
+      PathPart: itenorio-file-upload-bucket
+  FolderResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref BucketResource
+      PathPart: "{folder}"
+      RestApiId: !Ref RestApiGateway
+  ItemResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !Ref FolderResource
+      PathPart: "{item}"
+      RestApiId: !Ref RestApiGateway
