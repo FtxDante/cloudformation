@@ -1,4 +1,9 @@
 Transform: AWS::Serverless-2016-10-31
+Parameters:
+  BucketName:
+    Type: String
+    Default: cloud-guru-api-gateway
+    Description: The name of the S3 bucket to use in api gateway
 Resources:
   RestApiGateway:
     Type: AWS::ApiGateway::RestApi
@@ -9,18 +14,12 @@ Resources:
     Properties:
       RestApiId: !Ref RestApiGateway
       ParentId: !GetAtt RestApiGateway.RootResourceId
-      PathPart: itenorio-file-upload-bucket
-  FolderResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !Ref BucketResource
-      PathPart: '{folder}'
-      RestApiId: !Ref RestApiGateway
+      PathPart: !Ref BucketName
   ItemResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      ParentId: !Ref FolderResource
-      PathPart: '{item}'
+      ParentId: !Ref BucketResource
+      PathPart: "{item}"
       RestApiId: !Ref RestApiGateway
   GetItem:
     Type: AWS::ApiGateway::Method
@@ -30,15 +29,16 @@ Resources:
       HttpMethod: GET
       AuthorizationType: NONE
       RequestParameters:
-        - integration.request.path.object: method.request.path.item
+        method.request.path.item: true
+      MethodResponses:
+        - StatusCode: 200
       Integration:
-        Type: AWS_PROXY
+        Type: AWS
         Credentials: arn:aws:iam::287070382689:role/ApiGatewayS3Role
         IntegrationHttpMethod: GET
         IntegrationResponses:
           - StatusCode: 200
         PassthroughBehavior: WHEN_NO_MATCH
+        Uri: !Sub "arn:aws:apigateway:us-east-1:s3:path/${BucketName}/{object}"
         RequestParameters:
-          integration.request.header.Content-Disposition: method.request.header.Content-Disposition
-          integration.request.header.Content-Type: method.request.header.Content-Type
-        Uri: arn:aws:apigateway:us-east-1:s3:path/cloud-guru-api-gateway/{object}
+          integration.request.path.object: "method.request.path.item"
