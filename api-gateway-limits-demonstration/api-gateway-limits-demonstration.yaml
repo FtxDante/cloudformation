@@ -14,11 +14,31 @@ Resources:
     Type: AWS::ApiGateway::Resource
     Properties:
       ParentId: !Ref BucketResource
-      PathPart: "{folder}"
+      PathPart: '{folder}'
       RestApiId: !Ref RestApiGateway
   ItemResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       ParentId: !Ref FolderResource
-      PathPart: "{item}"
+      PathPart: '{item}'
       RestApiId: !Ref RestApiGateway
+  GetItem:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApiGateway
+      ResourceId: !Ref ItemResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      RequestParameters:
+        - integration.request.path.object: method.request.path.item
+      Integration:
+        Type: AWS_PROXY
+        Credentials: arn:aws:iam::287070382689:role/ApiGatewayS3Role
+        IntegrationHttpMethod: GET
+        IntegrationResponses:
+          - StatusCode: 200
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestParameters:
+          integration.request.header.Content-Disposition: method.request.header.Content-Disposition
+          integration.request.header.Content-Type: method.request.header.Content-Type
+        Uri: arn:aws:apigateway:us-east-1:s3:path/cloud-guru-api-gateway/{object}
